@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes Management System</title>
+  <meta name="description"
+    content="Intelligent notes management system with categorization for General, Study, Personal, and Job notes, pinning, archiving, and AI assistant capabilities.">
+
+  <!-- Google Fonts: Inter, Outfit, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <div class="app-container">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="brand-logo">
+          <div class="logo-icon-wrapper">
+            <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div class="brand-text">
+            <div class="brand-title" style="font-size: 1.05rem; white-space: nowrap;">Notes <span>Management</span></div>
+            <div class="brand-subtitle">System</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Main Navigation Views -->
+        <div>
+          <div class="nav-section-title">Views</div>
+          <ul class="nav-list">
+            <li class="nav-item active" id="nav-cat-all" onclick="app.setCategory('all')">
+              <div class="nav-item-left">
+                <i data-lucide="layers" style="width: 18px; height: 18px;"></i>
+                <span>All Notes</span>
+              </div>
+              <span class="nav-item-badge" id="badge-count-all">0</span>
+            </li>
+            <li class="nav-item" id="nav-pinned" onclick="app.setView('pinned')">
+              <div class="nav-item-left">
+                <i data-lucide="pin" style="width: 18px; height: 18px; color: var(--accent-primary);"></i>
+                <span>Pinned</span>
+              </div>
+              <span class="nav-item-badge" id="badge-count-pinned">0</span>
+            </li>
+            <li class="nav-item" id="nav-archived" onclick="app.setView('archived')">
+              <div class="nav-item-left">
+                <i data-lucide="archive" style="width: 18px; height: 18px;"></i>
+                <span>Archived</span>
+              </div>
+              <span class="nav-item-badge" id="badge-count-archived">0</span>
+            </li>
+            <li class="nav-item" id="nav-trash" onclick="app.setView('trash')">
+              <div class="nav-item-left">
+                <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+                <span>Trash</span>
+              </div>
+              <span class="nav-item-badge" id="badge-count-trash">0</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Categories Section -->
+        <div>
+          <div class="nav-section-title">
+            <span>Categories</span>
+            <i data-lucide="folder-plus" style="width: 14px; height: 14px; cursor: pointer;" title="Categories"></i>
+          </div>
+          <ul class="nav-list">
+            <li class="nav-item" id="nav-cat-general" onclick="app.setCategory('general')">
+              <div class="nav-item-left">
+                <span class="cat-dot general"></span>
+                <span>General</span>
+              </div>
+              <span class="nav-item-badge" id="badge-count-general">0</span>
+            </li>
+            <li class="nav-item" id="nav-cat-study" onclick="app.setCategory('study')">
+              <div class="nav-item-left">
+                <span class="cat-dot study"></span>
+                <span>Study</span>
+              </div>
+              <span class="nav-item-badge" id="badge-count-study">0</span>
+            </li>
+            <li class="nav-item" id="nav-cat-personal" onclick="app.setCategory('personal')">
+              <div class="nav-item-left">
+                <span class="cat-dot personal"></span>
+                <span>Personal</span>
+              </div>
+              <span class="nav-item-badge" id="badge-count-personal">0</span>
+            </li>
+            <li class="nav-item" id="nav-cat-job" onclick="app.setCategory('job')">
+              <div class="nav-item-left">
+                <span class="cat-dot job"></span>
+                <span>Job & Career</span>
+              </div>
+              <span class="nav-item-badge" id="badge-count-job">0</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Daily Notes Section in Sidebar (down to Categories) -->
+        <div class="sidebar-daily-notes-section">
+          <div class="nav-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>📅 Daily Notes</span>
+            <span class="sidebar-daily-total-badge" id="sidebar-daily-total-badge">0</span>
+          </div>
+          <div class="sidebar-daily-container" id="sidebar-daily-notes-container">
+            <!-- Dynamically rendered Monday -> Sunday rows -->
+          </div>
+        </div>
+
+        <!-- Tags Cloud -->
+        <div>
+          <div class="nav-section-title">Popular Tags</div>
+          <div class="tag-cloud" id="sidebar-tag-cloud">
+            <!-- Dynamically populated tags -->
+          </div>
+        </div>
+      </div>
+
+      <!-- User Profile Card -->
+      <div class="user-profile-badge" id="user-profile-section">
+        <div class="user-avatar" id="user-avatar-display">U</div>
+        <div class="user-info">
+          <span class="user-name" id="user-name-display">User</span>
+          <span class="user-role" id="user-role-display">Member</span>
+        </div>
+        <button class="btn-logout" title="Sign Out / Switch Account" onclick="app.logoutUser()">
+          <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-icon" id="theme-toggle-btn" title="Toggle Theme" onclick="app.toggleTheme()">
+          <i data-lucide="sun" id="theme-toggle-icon" style="width: 18px; height: 18px;"></i>
+        </button>
+        <button class="btn-icon" title="Export Notes (JSON)" onclick="app.exportNotes()">
+          <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+        </button>
+        <button class="btn-icon" title="AI Settings" onclick="app.openAIModal()">
+          <i data-lucide="sparkles" style="width: 18px; height: 18px; color: var(--accent-ai);"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="main-wrapper">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon mobile-menu-btn" id="mobile-menu-toggle" aria-label="Toggle menu">
+            <i data-lucide="menu" style="width: 20px; height: 20px;"></i>
+          </button>
+          <div class="search-box">
+            <i data-lucide="search" class="search-icon" style="width: 18px; height: 18px;"></i>
+            <input type="text" class="search-input" id="global-search-input"
+              placeholder="Search notes by title, keyword, or tag..." autocomplete="off">
+            <span class="search-shortcut">Ctrl+K</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <button class="btn-photo-note" onclick="document.getElementById('header-photo-input').click()" title="Attach Photo or Document Note">
+            <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
+            <span>📷 Photo / Doc Note</span>
+          </button>
+          <input type="file" id="header-photo-input" accept="image/*,.pdf,.txt,.docx" multiple style="display: none;" onchange="app.handleHeaderPhotoUpload(event)">
+          
+          <button class="btn-primary btn-ai" onclick="app.openAIModal()" title="Generate with AI">
+            <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+            <span>AI Note</span>
+          </button>
+          <button class="btn-primary" onclick="app.openEditorModal()" title="Create new note">
+            <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+            <span>New Note</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Quick Capture Bar -->
+      <div class="quick-bar-container">
+        <div class="quick-bar">
+          <i data-lucide="edit-3" style="width: 18px; height: 18px; color: var(--text-muted); margin-right: 8px;"></i>
+          <input type="text" class="quick-input" id="quick-note-input"
+            placeholder="Take a quick note... (Press Enter to create)"
+            onkeydown="if(event.key==='Enter') app.quickCapture()">
+          <input type="datetime-local" class="form-input" id="quick-reminder-input" style="width: 170px; height: 32px; font-size: 0.78rem; padding: 2px 6px;" title="Set Reminder Date & Time">
+          <select class="quick-category-select" id="quick-category-select" title="Category">
+            <option value="general">🌐 General</option>
+            <option value="study">🎓 Study</option>
+            <option value="personal">👤 Personal</option>
+            <option value="job">💼 Job</option>
+          </select>
+          <button class="btn-primary" style="height: 32px; padding: 0 12px; font-size: 0.82rem;"
+            onclick="app.quickCapture()">Add</button>
+        </div>
+      </div>
+
+      <!-- View Subheader & Controls -->
+      <div class="view-subheader">
+        <div class="view-title-group">
+          <h2 class="view-heading" id="current-view-heading">
+            <i data-lucide="layers"></i> All Notes
+          </h2>
+          <span class="view-count-badge" id="current-view-count">0 notes</span>
+        </div>
+
+        <div class="view-controls">
+          <select class="sort-select" onchange="app.setSortBy(this.value)" title="Sort notes">
+            <option value="updated">Recently Updated</option>
+            <option value="created">Recently Created</option>
+            <option value="title">Alphabetical (A-Z)</option>
+            <option value="priority">Priority</option>
+          </select>
+
+          <div class="view-mode-toggle">
+            <button class="view-mode-btn active" data-mode="grid" title="Grid View" onclick="app.setViewMode('grid')">
+              <i data-lucide="grid" style="width: 16px; height: 16px;"></i>
+            </button>
+            <button class="view-mode-btn" data-mode="list" title="List View" onclick="app.setViewMode('list')">
+              <i data-lucide="list" style="width: 16px; height: 16px;"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes Grid / Container -->
+      <div class="notes-container" id="notes-scroll-container">
+        <!-- Dynamically rendered note cards -->
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== NOTE EDITOR MODAL ==================== -->
+  <div class="modal-backdrop" id="editor-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="editor-modal-title">Create New Note</h3>
+        <button class="btn-icon" onclick="app.closeEditorModal()">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <input type="text" class="editor-input-title" id="editor-title-input" placeholder="Note Title...">
+
+        <div class="editor-toolbar">
+          <button type="button" class="editor-tool-btn" title="Bold" onclick="app.insertMarkdown('bold')">
+            <i data-lucide="bold" style="width: 15px; height: 15px;"></i>
+          </button>
+          <button type="button" class="editor-tool-btn" title="Italic" onclick="app.insertMarkdown('italic')">
+            <i data-lucide="italic" style="width: 15px; height: 15px;"></i>
+          </button>
+          <button type="button" class="editor-tool-btn" title="Heading" onclick="app.insertMarkdown('heading')">
+            <i data-lucide="heading" style="width: 15px; height: 15px;"></i>
+          </button>
+          <button type="button" class="editor-tool-btn" title="Checklist" onclick="app.insertMarkdown('checklist')">
+            <i data-lucide="check-square" style="width: 15px; height: 15px;"></i>
+          </button>
+          <button type="button" class="editor-tool-btn" title="Bullet List" onclick="app.insertMarkdown('bullet')">
+            <i data-lucide="list" style="width: 15px; height: 15px;"></i>
+          </button>
+          <button type="button" class="editor-tool-btn" title="Code snippet" onclick="app.insertMarkdown('code')">
+            <i data-lucide="code" style="width: 15px; height: 15px;"></i>
+          </button>
+          <button type="button" class="editor-tool-btn" title="Quote" onclick="app.insertMarkdown('quote')">
+            <i data-lucide="quote" style="width: 15px; height: 15px;"></i>
+          </button>
+        </div>
+
+        <textarea class="editor-textarea" id="editor-content-input"
+          placeholder="Type your note in markdown or plain text..."></textarea>
+
+        <div class="editor-meta-grid">
+          <div class="form-group">
+            <label class="form-label" for="editor-category-select">Category</label>
+            <select class="form-select" id="editor-category-select">
+              <option value="general">🌐 General</option>
+              <option value="study">🎓 Study</option>
+              <option value="personal">👤 Personal</option>
+              <option value="job">💼 Job & Career</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="editor-priority-select">Priority</label>
+            <select class="form-select" id="editor-priority-select">
+              <option value="low">Low Priority</option>
+              <option value="medium" selected>Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="editor-day-select">📅 Assigned Day of Week</label>
+            <select class="form-select" id="editor-day-select">
+              <option value="auto">Auto (Created Date)</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editor-tags-input">Tags (comma-separated)</label>
+          <input type="text" class="form-input" id="editor-tags-input" placeholder="e.g. Planning, Algorithms, Design">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editor-reminder-input">⏰ Set Reminder / Due Date</label>
+          <input type="datetime-local" class="form-input" id="editor-reminder-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Attachments (Photos & Documents)</label>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" class="btn-attach" onclick="document.getElementById('editor-file-input').click()">
+              <i data-lucide="paperclip" style="width: 15px; height: 15px;"></i> Attach Photo / Document
+            </button>
+            <input type="file" id="editor-file-input" accept="image/*,.pdf,.txt,.docx" multiple style="display: none;" onchange="app.handleFileUpload(event)">
+            <span style="font-size: 0.78rem; color: var(--text-muted);">Supports JPG, PNG, PDF, TXT, DOCX</span>
+          </div>
+          <div id="editor-attachments-preview" class="note-attachments-grid"></div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="editor-pin-checkbox" style="cursor: pointer; width: 16px; height: 16px;">
+          <label for="editor-pin-checkbox" style="font-size: 0.88rem; cursor: pointer; color: var(--text-secondary);">
+            Pin this note to the top of the board
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="app.closeEditorModal()">Cancel</button>
+        <button class="btn-primary" onclick="app.saveEditorModal()">
+          <i data-lucide="check" style="width: 16px; height: 16px;"></i> Save Note
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== AI GENERATOR MODAL ==================== -->
+  <div class="modal-backdrop" id="ai-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h3 class="modal-title">✨ AI Note Generator</h3>
+          <span class="ai-badge">AI Assistant</span>
+        </div>
+        <button class="btn-icon" onclick="app.closeAIModal()">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="ai-prompt-input">What would you like AI to generate?</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" class="form-input" id="ai-prompt-input"
+              placeholder="e.g., Sprint review notes, Deep learning study sheet, Weekly habits..." style="flex: 1;">
+            <select class="form-select" id="ai-category-select" style="width: 140px;">
+              <option value="general">🌐 General</option>
+              <option value="study">🎓 Study</option>
+              <option value="personal">👤 Personal</option>
+              <option value="job">💼 Job</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Quick Prompt Templates</label>
+          <div class="ai-prompt-templates">
+            <div class="ai-template-card"
+              onclick="app.runAIGenerator('Q3 Sprint Retrospective and Roadmap Milestones')">
+              <div class="ai-template-title">💼 Sprint Retrospective</div>
+              <div class="ai-template-desc">Roadmap milestones, deliverables & blockers</div>
+            </div>
+            <div class="ai-template-card"
+              onclick="app.runAIGenerator('Machine Learning Fundamentals & Loss Functions')">
+              <div class="ai-template-title">🎓 ML Fundamentals</div>
+              <div class="ai-template-desc">Key equations, loss functions & concepts</div>
+            </div>
+            <div class="ai-template-card" onclick="app.runAIGenerator('Weekly Wellness Protocol & Cardio Habits')">
+              <div class="ai-template-title">👤 Wellness & Habit Routine</div>
+              <div class="ai-template-desc">Daily checklist, cardio goals & nutrition</div>
+            </div>
+            <div class="ai-template-card"
+              onclick="app.runAIGenerator('Microservices Design Patterns & Event Driven Architecture')">
+              <div class="ai-template-title">🌐 System Design Blueprint</div>
+              <div class="ai-template-desc">Architecture breakdown & best practices</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary btn-ai" style="width: 100%; justify-content: center;" onclick="app.runAIGenerator()">
+          <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i> Generate Structured Note
+        </button>
+
+        <div class="ai-response-box" id="ai-result-box">
+          <!-- AI generated draft output -->
+        </div>
+
+        <div id="ai-action-buttons" style="display: none; justify-content: flex-end; gap: 10px;">
+          <button class="btn-primary" onclick="app.applyGeneratedNote()">
+            <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Create Note from Draft
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== NOTE AI SUITE MODAL ==================== -->
+  <div class="modal-backdrop" id="note-ai-suite-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">✨ AI Note Assistant</h3>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;" id="ai-suite-note-title">Target
+            Note</div>
+        </div>
+        <button class="btn-icon" onclick="app.closeNoteAIDrawer()">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <button class="btn-secondary" style="justify-content: flex-start;" onclick="app.runNoteAISummary()">
+            <i data-lucide="file-text" style="width: 16px; height: 16px; color: var(--accent-ai);"></i>
+            <span>Executive Summary</span>
+          </button>
+          <button class="btn-secondary" style="justify-content: flex-start;" onclick="app.runNoteActionItems()">
+            <i data-lucide="check-square" style="width: 16px; height: 16px; color: var(--cat-study);"></i>
+            <span>Extract Action Items</span>
+          </button>
+          <button class="btn-secondary" style="justify-content: flex-start;"
+            onclick="app.runNoteToneRewrite('professional')">
+            <i data-lucide="briefcase" style="width: 16px; height: 16px; color: var(--cat-job);"></i>
+            <span>Professional Tone</span>
+          </button>
+          <button class="btn-secondary" style="justify-content: flex-start;" onclick="app.openFlashcardsStudyMode()">
+            <i data-lucide="brain" style="width: 16px; height: 16px; color: var(--cat-study);"></i>
+            <span>Flashcards Study Mode</span>
+          </button>
+        </div>
+
+        <div class="ai-response-box" id="ai-suite-output">
+          <!-- Output from chosen AI function -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FLASHCARDS STUDY MODAL ==================== -->
+  <div class="modal-backdrop" id="flashcard-modal">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="brain" style="width: 20px; height: 20px; color: var(--cat-study);"></i>
+          <h3 class="modal-title">AI Study Flashcards</h3>
+        </div>
+        <button class="btn-icon" onclick="app.closeFlashcardsModal()">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" style="align-items: center;">
+        <div style="font-size: 0.8rem; color: var(--text-muted);" id="flashcard-counter">Card 1 of 3</div>
+
+        <div class="flashcard-wrapper" id="flashcard-wrapper" onclick="app.toggleFlipCard()">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              <span
+                style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cat-study); font-weight: 700; margin-bottom: 12px;">QUESTION</span>
+              <h3 id="flashcard-front-text" style="font-size: 1.15rem; line-height: 1.4;">Question Prompt</h3>
+              <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: auto;">Click or tap to reveal
+                answer</span>
+            </div>
+            <div class="flashcard-back">
+              <span
+                style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cat-study); font-weight: 700; margin-bottom: 12px;">ANSWER
+                / KEY CONCEPT</span>
+              <p id="flashcard-back-text" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-primary);">
+                Detailed answer text</p>
+              <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: auto;">Click or tap to flip
+                back</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flashcard-nav" style="width: 100%;">
+          <button class="btn-secondary" onclick="app.prevFlashcard()">
+            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> Prev
+          </button>
+          <button class="btn-secondary" onclick="app.toggleFlipCard()">
+            <i data-lucide="rotate-cw" style="width: 16px; height: 16px;"></i> Flip
+          </button>
+          <button class="btn-primary" onclick="app.nextFlashcard()">
+            Next <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LOGIN REMINDER ALERT MODAL ==================== -->
+  <div class="modal-backdrop" id="reminder-alert-modal">
+    <div class="modal-container" style="max-width: 480px; border-top: 4px solid #f59e0b;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="bell" style="width: 20px; height: 20px; color: #fbbf24;"></i>
+          <h3 class="modal-title" style="color: #fbbf24;">Upcoming Reminder Alert!</h3>
+        </div>
+        <button class="btn-icon" onclick="app.closeReminderAlertModal()">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" id="reminder-alert-body" style="gap: 14px;">
+        <!-- Dynamically populated with active note reminders -->
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="app.closeReminderAlertModal()" style="width: 100%;">
+          Got it, thanks!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST CONTAINER ==================== -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/sample-data.js"></script>
+  <script src="js/ai-service.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Initialize Lucide icons on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>
