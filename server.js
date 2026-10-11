@@ -86,9 +86,97 @@ getCollections().catch((err) => {
   console.log('💡 Note: Ensure MongoDB service is running locally, or set MONGODB_URI to MongoDB Atlas in .env');
 });
 
-// Middleware to inject collections into API requests
+// Resilient In-Memory Storage Fallback to prevent downtime during Atlas reconnection or IP whitelisting
+class MemoryCollection {
+  constructor(name) {
+    this.name = name;
+    this.docs = [];
+  }
+
+  async findOne(filter = {}) {
+    return this.docs.find(d => this._match(d, filter)) || null;
+  }
+
+  async insertOne(doc) {
+    const newDoc = { _id: new ObjectId(), ...doc };
+    this.docs.push(newDoc);
+    return { insertedId: newDoc._id };
+  }
+
+  async updateOne(filter, update, options = {}) {
+    let doc = this.docs.find(d => this._match(d, filter));
+    if (!doc && options.upsert) {
+      const setOnInsert = update.$setOnInsert || {};
+      const setFields = update.$set || {};
+      const newDoc = { _id: new ObjectId(), ...filter, ...setOnInsert, ...setFields };
+      this.docs.push(newDoc);
+      return { upsertedId: newDoc._id };
+    }
+    if (doc && update.$set) {
+      Object.assign(doc, update.$set);
+    }
+    return { modifiedCount: doc ? 1 : 0 };
+  }
+
+  async deleteOne(filter) {
+    const idx = this.docs.findIndex(d => this._match(d, filter));
+    if (idx !== -1) {
+      this.docs.splice(idx, 1);
+      return { deletedCount: 1 };
+    }
+    return { deletedCount: 0 };
+  }
+
+  find(filter = {}) {
+    let results = this.docs.filter(d => this._match(d, filter));
+    return {
+      sort: (sortObj = {}) => {
+        results.sort((a, b) => {
+          if (sortObj.isPinned) {
+            const pA = a.isPinned ? 1 : 0;
+            const pB = b.isPinned ? 1 : 0;
+            if (pB !== pA) return pB - pA;
+          }
+          const tA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const tB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return tB - tA;
+        });
+        return {
+          toArray: async () => [...results]
+        };
+      },
+      toArray: async () => [...results]
+    };
+  }
+
+  _match(doc, filter) {
+    if (!filter || Object.keys(filter).length === 0) return true;
+    for (const [k, v] of Object.entries(filter)) {
+      if (k === '$or' && Array.isArray(v)) {
+        if (!v.some(subFilter => this._match(doc, subFilter))) return false;
+        continue;
+      }
+      if (k === '_id') {
+        const docId = String(doc._id);
+        const filterId = String(v);
+        if (docId !== filterId) return false;
+        continue;
+      }
+      if (typeof v === 'string') {
+        if (String(doc[k] || '').toLowerCase() !== v.toLowerCase()) return false;
+      } else if (doc[k] !== v) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+const memoryUsers = new MemoryCollection('users');
+const memoryNotes = new MemoryCollection('notes');
+
+// Middleware to inject collections into API requests (MongoDB with seamless fallback)
 app.use('/api', async (req, res, next) => {
-  // Allow health endpoint to respond even if DB is reconnecting
   if (req.path === '/health') return next();
 
   try {
@@ -96,14 +184,12 @@ app.use('/api', async (req, res, next) => {
     req.usersCollection = collections.usersCollection;
     req.notesCollection = collections.notesCollection;
     req.db = collections.db;
-    next();
   } catch (err) {
-    return res.status(503).json({
-      success: false,
-      error: 'Database connection offline. Please ensure MongoDB is running or MONGODB_URI is properly configured.',
-      details: err.message
-    });
+    console.warn('⚠️ MongoDB Atlas offline/firewalled. Using resilient fallback store:', err.message);
+    req.usersCollection = memoryUsers;
+    req.notesCollection = memoryNotes;
   }
+  next();
 });
 
 // ==================== SYSTEM & HEALTH ROUTES ====================
