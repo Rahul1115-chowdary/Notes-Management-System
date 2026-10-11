@@ -17,8 +17,9 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Application Stylesheet -->
+  <!-- Application Stylesheet & Configuration -->
   <link rel="stylesheet" href="css/styles.css">
+  <script src="js/config.js"></script>
 </head>
 
 <body class="auth-body">
@@ -246,7 +247,9 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    const API_BASE = (window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : 'http://localhost:5000';
+    const API_BASE = (typeof getEffectiveApiBase === 'function') 
+      ? getEffectiveApiBase() 
+      : ((window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : 'http://localhost:5000');
 
     // Handle Form Logins
     async function handleLoginSubmit(e) {

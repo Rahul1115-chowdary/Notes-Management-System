@@ -42,6 +42,9 @@ class NotesApp {
   }
 
   getApiBase() {
+    if (typeof getEffectiveApiBase === 'function') {
+      return getEffectiveApiBase();
+    }
     return (window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : 'http://localhost:5000';
   }
 
