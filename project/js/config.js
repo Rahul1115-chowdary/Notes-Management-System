@@ -11,8 +11,8 @@
  */
 
 window.APP_CONFIG = {
-  // 👉 Paste your live Render backend URL here (e.g., "https://notes-backend.onrender.com")
-  BACKEND_URL: "",
+  // 👉 Live Render backend URL:
+  BACKEND_URL: "https://notes-management-backend-h087.onrender.com",
 
   // Default credentials for one-click demo login
   DEMO_EMAIL: "demo@novanotes.ai",
