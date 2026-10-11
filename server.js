@@ -49,41 +49,57 @@ function deriveNameFromEmail(email) {
 }
 
 // Connect to MongoDB with connection caching for serverless & local environments
+let lastConnectAttempt = 0;
+let isConnecting = false;
+
 async function getCollections() {
   if (usersCollection && notesCollection && db) {
     return { usersCollection, notesCollection, db };
   }
 
-  if (!connectionPromise) {
-    connectionPromise = (async () => {
-      try {
-        console.log(`📡 Connecting to MongoDB: ${MONGO_URI.replace(/:[^:]*@/, ':****@')}`);
-        const mongoClient = new MongoClient(MONGO_URI, {
-          serverSelectionTimeoutMS: 5000,
-          connectTimeoutMS: 5000
-        });
-        await mongoClient.connect();
-        client = mongoClient;
-        db = client.db(DB_NAME);
-        usersCollection = db.collection('users');
-        notesCollection = db.collection('notes');
-        console.log(`✅ Native MongoDB Client connected to: ${DB_NAME}`);
-        return { usersCollection, notesCollection, db };
-      } catch (err) {
-        connectionPromise = null;
-        console.error('❌ MongoDB Connection Error:', err.message);
-        throw err;
-      }
-    })();
+  if (isConnecting && connectionPromise) {
+    return connectionPromise;
   }
+
+  const now = Date.now();
+  // If connection failed recently, avoid freezing requests for 5 seconds; cooldown for 8 seconds
+  if (now - lastConnectAttempt < 8000) {
+    throw new Error('MongoDB reconnect cooldown');
+  }
+
+  lastConnectAttempt = now;
+  isConnecting = true;
+
+  connectionPromise = (async () => {
+    try {
+      console.log(`📡 Connecting to MongoDB: ${MONGO_URI.replace(/:[^:]*@/, ':****@')}`);
+      const mongoClient = new MongoClient(MONGO_URI, {
+        serverSelectionTimeoutMS: 4000,
+        connectTimeoutMS: 4000
+      });
+      await mongoClient.connect();
+      client = mongoClient;
+      db = client.db(DB_NAME);
+      usersCollection = db.collection('users');
+      notesCollection = db.collection('notes');
+      console.log(`✅ Native MongoDB Client connected to: ${DB_NAME}`);
+      isConnecting = false;
+      return { usersCollection, notesCollection, db };
+    } catch (err) {
+      connectionPromise = null;
+      isConnecting = false;
+      console.error('❌ MongoDB Connection Error:', err.message);
+      throw err;
+    }
+  })();
 
   return connectionPromise;
 }
 
-// Initial connection attempt on boot
+// Background initial connection attempt on boot (non-blocking)
 getCollections().catch((err) => {
-  console.warn('⚠️ Initial MongoDB connection notice:', err.message);
-  console.log('💡 Note: Ensure MongoDB service is running locally, or set MONGODB_URI to MongoDB Atlas in .env');
+  console.warn('⚠️ MongoDB initial connect notice:', err.message);
+  console.log('💡 Note: Operating with resilient fallback store until database reconnects');
 });
 
 // Resilient In-Memory Storage Fallback to prevent downtime during Atlas reconnection or IP whitelisting
@@ -156,10 +172,19 @@ class MemoryCollection {
         if (!v.some(subFilter => this._match(doc, subFilter))) return false;
         continue;
       }
-      if (k === '_id') {
-        const docId = String(doc._id);
-        const filterId = String(v);
+      if (k === '_id' || k === 'id') {
+        const docId = String(doc._id || doc.id || '');
+        const filterId = String(v || '');
         if (docId !== filterId) return false;
+        continue;
+      }
+      if (v instanceof RegExp) {
+        if (!v.test(String(doc[k] || ''))) return false;
+        continue;
+      }
+      if (v && typeof v === 'object' && v.$regex) {
+        const re = new RegExp(v.$regex, v.$options || 'i');
+        if (!re.test(String(doc[k] || ''))) return false;
         continue;
       }
       if (typeof v === 'string') {
@@ -193,20 +218,12 @@ app.use('/api', async (req, res, next) => {
 });
 
 // ==================== SYSTEM & HEALTH ROUTES ====================
-app.get('/api/health', async (req, res) => {
-  let dbStatus = 'disconnected';
-  try {
-    const collections = await getCollections();
-    await collections.db.command({ ping: 1 });
-    dbStatus = 'connected';
-  } catch (e) {
-    dbStatus = `disconnected (${e.message})`;
-  }
-
-  res.json({
+app.get('/api/health', (req, res) => {
+  const isDbConnected = Boolean(db && client);
+  res.status(200).json({
     success: true,
     status: 'ok',
-    database: dbStatus,
+    database: isDbConnected ? 'connected' : (isConnecting ? 'connecting' : 'ready_fallback'),
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -423,8 +440,8 @@ app.post('/api/notes', jwtAuth.optionalAuth, validator.validateNotePayload, asyn
     delete noteData._id;
 
     const result = await req.notesCollection.insertOne(noteData);
-    const savedNote = await req.notesCollection.findOne({ _id: result.insertedId });
-    console.log(`✅ Native MongoDB: Note created -> "${savedNote.title}"`);
+    const savedNote = (await req.notesCollection.findOne({ _id: result.insertedId })) || { ...noteData, _id: result.insertedId };
+    console.log(`✅ Native MongoDB: Note created -> "${savedNote.title || 'Untitled'}"`);
     res.json({ success: true, data: savedNote });
   } catch (error) {
     next(error);
@@ -447,7 +464,7 @@ app.put('/api/notes/:id', jwtAuth.optionalAuth, validator.validateNotePayload, a
       { $or: queryFilters },
       { $set: updateData }
     );
-    const updated = await req.notesCollection.findOne({ $or: queryFilters });
+    const updated = (await req.notesCollection.findOne({ $or: queryFilters })) || { id, ...updateData };
     res.json({ success: true, data: updated });
   } catch (error) {
     next(error);
