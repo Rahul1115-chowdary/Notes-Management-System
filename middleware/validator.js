@@ -68,15 +68,24 @@ function validateLogin(req, res, next) {
 function validateNotePayload(req, res, next) {
   const { title, content } = req.body || {};
 
-  if (!title || typeof title !== 'string' || title.trim() === '') {
-    return res.status(400).json({
-      success: false,
-      error: 'Note title is required and cannot be empty.'
-    });
+  // For PUT requests, allow partial updates (e.g. updating isPinned, isArchived, isTrash without title)
+  if (req.method === 'PUT') {
+    if (title && typeof title === 'string') {
+      req.body.title = sanitizeText(title);
+    }
+    if (content && typeof content === 'string') {
+      req.body.content = sanitizeText(content);
+    }
+    return next();
   }
 
-  // Sanitize title and content
-  req.body.title = sanitizeText(title);
+  // For POST requests, default title to 'Untitled Note' if not provided
+  if (!title || typeof title !== 'string' || title.trim() === '') {
+    req.body.title = 'Untitled Note';
+  } else {
+    req.body.title = sanitizeText(title);
+  }
+
   if (content && typeof content === 'string') {
     req.body.content = sanitizeText(content);
   }

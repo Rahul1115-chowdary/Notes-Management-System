@@ -1,13 +1,23 @@
 {
-  "name": "project",
+  "name": "notes-management-system",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Full-stack Notes Management System with MongoDB, Express, and modern responsive frontend",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test-connection.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "notes",
+    "notes-management",
+    "mongodb",
+    "express",
+    "nodejs",
+    "fullstack",
+    "vercel"
+  ],
+  "author": "Rahul Chowdary",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

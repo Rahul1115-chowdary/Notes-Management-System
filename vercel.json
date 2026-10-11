@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/css/(.*)", "destination": "/project/css/$1" },
+    { "source": "/js/(.*)", "destination": "/project/js/$1" },
+    { "source": "/login.html", "destination": "/project/login.html" },
+    { "source": "/index.html", "destination": "/project/index.html" },
+    { "source": "/", "destination": "/project/index.html" },
+    { "source": "/project/(.*)", "destination": "/project/$1" }
+  ]
+}

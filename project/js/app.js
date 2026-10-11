@@ -388,7 +388,7 @@ class NotesApp {
 
   togglePin(id, event) {
     if (event) event.stopPropagation();
-    const note = this.notes.find(n => n.id === id);
+    const note = this.notes.find(n => n.id === id || n._id === id);
     if (!note) return;
 
     note.isPinned = !note.isPinned;
@@ -396,11 +396,21 @@ class NotesApp {
     this.saveNotes();
     this.render();
     this.showToast(note.isPinned ? '📌 Note pinned to top' : 'Note unpinned', 'info');
+
+    const API_BASE = this.getApiBase();
+    const targetId = note._id || note.id;
+    if (targetId && !targetId.startsWith('note-')) {
+      fetch(`${API_BASE}/api/notes/${targetId}`, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ isPinned: note.isPinned })
+      }).catch(err => console.error('Failed to sync pin status:', err));
+    }
   }
 
   toggleArchive(id, event) {
     if (event) event.stopPropagation();
-    const note = this.notes.find(n => n.id === id);
+    const note = this.notes.find(n => n.id === id || n._id === id);
     if (!note) return;
 
     note.isArchived = !note.isArchived;
@@ -409,11 +419,21 @@ class NotesApp {
     this.saveNotes();
     this.render();
     this.showToast(note.isArchived ? '📦 Note moved to Archive' : 'Note unarchived', 'info');
+
+    const API_BASE = this.getApiBase();
+    const targetId = note._id || note.id;
+    if (targetId && !targetId.startsWith('note-')) {
+      fetch(`${API_BASE}/api/notes/${targetId}`, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ isArchived: note.isArchived, isPinned: note.isPinned })
+      }).catch(err => console.error('Failed to sync archive status:', err));
+    }
   }
 
   moveToTrash(id, event) {
     if (event) event.stopPropagation();
-    const note = this.notes.find(n => n.id === id);
+    const note = this.notes.find(n => n.id === id || n._id === id);
     if (!note) return;
 
     note.isTrash = true;
@@ -422,11 +442,21 @@ class NotesApp {
     this.saveNotes();
     this.render();
     this.showToast('🗑️ Note moved to Trash', 'warning');
+
+    const API_BASE = this.getApiBase();
+    const targetId = note._id || note.id;
+    if (targetId && !targetId.startsWith('note-')) {
+      fetch(`${API_BASE}/api/notes/${targetId}`, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ isTrash: true, isPinned: false })
+      }).catch(err => console.error('Failed to sync trash status:', err));
+    }
   }
 
   restoreFromTrash(id, event) {
     if (event) event.stopPropagation();
-    const note = this.notes.find(n => n.id === id);
+    const note = this.notes.find(n => n.id === id || n._id === id);
     if (!note) return;
 
     note.isTrash = false;
@@ -434,6 +464,16 @@ class NotesApp {
     this.saveNotes();
     this.render();
     this.showToast('Note restored from Trash', 'success');
+
+    const API_BASE = this.getApiBase();
+    const targetId = note._id || note.id;
+    if (targetId && !targetId.startsWith('note-')) {
+      fetch(`${API_BASE}/api/notes/${targetId}`, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ isTrash: false })
+      }).catch(err => console.error('Failed to sync restore status:', err));
+    }
   }
 
   permanentDelete(id, event) {
@@ -475,7 +515,7 @@ class NotesApp {
 
   toggleChecklistItem(noteId, lineIndex, event) {
     if (event) event.stopPropagation();
-    const note = this.notes.find(n => n.id === noteId);
+    const note = this.notes.find(n => n.id === noteId || n._id === noteId);
     if (!note) return;
 
     const lines = note.content.split('\n');
@@ -499,6 +539,16 @@ class NotesApp {
     note.updatedAt = new Date().toISOString();
     this.saveNotes();
     this.render();
+
+    const API_BASE = this.getApiBase();
+    const targetId = note._id || note.id;
+    if (targetId && !targetId.startsWith('note-')) {
+      fetch(`${API_BASE}/api/notes/${targetId}`, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ content: note.content })
+      }).catch(err => console.error('Failed to sync checklist change:', err));
+    }
   }
 
   /* --- Filtering, Searching & Sorting --- */
