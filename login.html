@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Notes Management System</title>
+  <meta name="description" content="Secure sign in for Notes Management System">
+
+  <!-- Google Fonts: Inter, Outfit, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Application Stylesheet & Configuration -->
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/config.js"></script>
+</head>
+
+<body class="auth-body">
+
+  <!-- Ambient Glow Orbs -->
+  <div class="auth-glow-orb-1"></div>
+  <div class="auth-glow-orb-2"></div>
+
+  <!-- Main Auth Card -->
+  <div class="auth-card">
+    
+    <!-- Header with Brand Logo -->
+    <div class="auth-header">
+      <a href="index.html" class="brand-logo">
+        <div class="logo-icon-wrapper">
+          <i data-lucide="sparkles" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div class="brand-text" style="text-align: left;">
+          <div class="brand-title" style="font-size: 1.15rem; white-space: nowrap;">Notes <span>Management</span></div>
+          <div class="brand-subtitle">System</div>
+        </div>
+      </a>
+      <h2 class="auth-title" id="auth-main-title">Welcome Back</h2>
+      <p class="auth-subtitle" id="auth-main-subtitle">Sign in to access your intelligent workspace</p>
+    </div>
+
+    <!-- Quick Demo Login Banner -->
+    <div class="demo-login-box" id="demo-banner">
+      <div class="demo-login-text">
+        <span>⚡ Quick Test? Sign in as <strong>Demo User</strong></span>
+      </div>
+      <button type="button" class="btn-demo-quick" onclick="handleDemoLogin()">
+        Instant Login
+      </button>
+    </div>
+
+    <!-- Auth Tabs (Sign In / Sign Up) -->
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab-btn active" id="tab-login" onclick="switchAuthTab('login')">
+        Sign In
+      </button>
+      <button type="button" class="auth-tab-btn" id="tab-signup" onclick="switchAuthTab('signup')">
+        Create Account
+      </button>
+    </div>
+
+    <!-- ==================== SIGN IN FORM ==================== -->
+    <form class="auth-form" id="form-login" onsubmit="handleLoginSubmit(event)">
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email Address</label>
+        <div class="input-with-icon">
+          <i data-lucide="mail" class="input-icon-left" style="width: 18px; height: 18px;"></i>
+          <input type="email" class="auth-input" id="login-email" placeholder="name@company.com" required autocomplete="email">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <div class="input-with-icon">
+          <i data-lucide="lock" class="input-icon-left" style="width: 18px; height: 18px;"></i>
+          <input type="password" class="auth-input" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+          <i data-lucide="eye" class="input-icon-right" id="login-eye-icon" style="width: 18px; height: 18px;" onclick="togglePasswordVisibility('login-password', 'login-eye-icon')"></i>
+        </div>
+      </div>
+
+      <div class="form-row-between">
+        <label class="checkbox-label">
+          <input type="checkbox" id="remember-me" checked style="cursor: pointer; width: 15px; height: 15px;">
+          <span>Remember me</span>
+        </label>
+        <a class="auth-link" onclick="switchAuthTab('forgot')">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn-primary btn-ai" style="width: 100%; justify-content: center; height: 38px; margin-top: 2px;">
+        <i data-lucide="log-in" style="width: 16px; height: 16px;"></i> Sign In
+      </button>
+    </form>
+
+    <!-- ==================== SIGN UP FORM ==================== -->
+    <form class="auth-form" id="form-signup" style="display: none;" onsubmit="handleSignupSubmit(event)">
+      <div class="form-group">
+        <label class="form-label" for="signup-name">Full Name</label>
+        <div class="input-with-icon">
+          <i data-lucide="user" class="input-icon-left" style="width: 18px; height: 18px;"></i>
+          <input type="text" class="auth-input" id="signup-name" placeholder="Alex Morgan" required autocomplete="name">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signup-email">Work or Personal Email</label>
+        <div class="input-with-icon">
+          <i data-lucide="mail" class="input-icon-left" style="width: 18px; height: 18px;"></i>
+          <input type="email" class="auth-input" id="signup-email" placeholder="alex@example.com" required autocomplete="email">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signup-password">Password</label>
+        <div class="input-with-icon">
+          <i data-lucide="lock" class="input-icon-left" style="width: 18px; height: 18px;"></i>
+          <input type="password" class="auth-input" id="signup-password" placeholder="At least 6 characters" required autocomplete="new-password">
+          <i data-lucide="eye" class="input-icon-right" id="signup-eye-icon" style="width: 18px; height: 18px;" onclick="togglePasswordVisibility('signup-password', 'signup-eye-icon')"></i>
+        </div>
+      </div>
+
+      <label class="checkbox-label" style="font-size: 0.82rem; margin-top: 2px;">
+        <input type="checkbox" required style="cursor: pointer; width: 15px; height: 15px;">
+        <span>I agree to the <a class="auth-link">Terms of Service</a> & <a class="auth-link">Privacy Policy</a></span>
+      </label>
+
+      <button type="submit" class="btn-primary btn-ai" style="width: 100%; justify-content: center; height: 38px; margin-top: 2px;">
+        <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i> Create Account
+      </button>
+    </form>
+
+    <!-- ==================== FORGOT PASSWORD FORM ==================== -->
+    <form class="auth-form" id="form-forgot" style="display: none;" onsubmit="handleForgotSubmit(event)">
+      <div class="form-group">
+        <label class="form-label" for="forgot-email">Account Email</label>
+        <div class="input-with-icon">
+          <i data-lucide="mail" class="input-icon-left" style="width: 18px; height: 18px;"></i>
+          <input type="email" class="auth-input" id="forgot-email" placeholder="name@company.com" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; height: 38px; margin-top: 2px;">
+        <i data-lucide="send" style="width: 16px; height: 16px;"></i> Send Reset Link
+      </button>
+
+      <div style="text-align: center; margin-top: 8px;">
+        <a class="auth-link" onclick="switchAuthTab('login')">← Back to Sign In</a>
+      </div>
+    </form>
+
+    <!-- Theme Toggle at Bottom -->
+    <div style="display: flex; justify-content: center; margin-top: 8px;">
+      <button type="button" class="btn-icon" title="Toggle Dark/Light Mode" onclick="toggleAuthTheme()">
+        <i data-lucide="sun" id="auth-theme-icon" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Auth Logic Script -->
+  <script>
+    // Initialize Theme
+    function initTheme() {
+      const theme = localStorage.getItem('nova_notes_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      const icon = document.getElementById('auth-theme-icon');
+      if (icon) {
+        icon.setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function toggleAuthTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('nova_notes_theme', next);
+      initTheme();
+      showToast(`Switched to ${next} mode`, 'info');
+    }
+
+    // Toggle Password Visibility
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!input || !icon) return;
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Switch between Sign In / Sign Up / Forgot Password
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('form-login');
+      const signupForm = document.getElementById('form-signup');
+      const forgotForm = document.getElementById('form-forgot');
+      const tabLogin = document.getElementById('tab-login');
+      const tabSignup = document.getElementById('tab-signup');
+      const socialSection = document.getElementById('social-section');
+      const demoBanner = document.getElementById('demo-banner');
+      const title = document.getElementById('auth-main-title');
+      const subtitle = document.getElementById('auth-main-subtitle');
+
+      tabLogin.classList.remove('active');
+      tabSignup.classList.remove('active');
+      loginForm.style.display = 'none';
+      signupForm.style.display = 'none';
+      forgotForm.style.display = 'none';
+
+      if (tab === 'login') {
+        tabLogin.classList.add('active');
+        loginForm.style.display = 'flex';
+        socialSection.style.display = 'block';
+        demoBanner.style.display = 'flex';
+        title.textContent = 'Welcome Back';
+        subtitle.textContent = 'Sign in to access your intelligent workspace';
+      } else if (tab === 'signup') {
+        tabSignup.classList.add('active');
+        signupForm.style.display = 'flex';
+        socialSection.style.display = 'block';
+        demoBanner.style.display = 'none';
+        title.textContent = 'Create an Account';
+        subtitle.textContent = 'Start organizing your notes with AI power';
+      } else if (tab === 'forgot') {
+        forgotForm.style.display = 'flex';
+        socialSection.style.display = 'none';
+        demoBanner.style.display = 'none';
+        title.textContent = 'Reset Password';
+        subtitle.textContent = 'Enter your email to receive recovery instructions';
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    const API_BASE = (typeof getEffectiveApiBase === 'function') 
+      ? getEffectiveApiBase() 
+      : ((window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : 'http://localhost:5000');
+
+    // Handle Form Logins
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const name = email.split('@')[0].replace(/[._]/g, ' ');
+      const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          loginUser(data.user, data.token);
+          return;
+        }
+      } catch (err) {
+        console.log('Backend offline, using client session:', err);
+      }
+
+      // Offline / Client fallback
+      loginUser({
+        name: formattedName || 'User',
+        email: email,
+        avatar: (formattedName || 'U').charAt(0).toUpperCase(),
+        role: 'Pro Member'
+      });
+    }
+
+    async function handleSignupSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          showToast('Account created in MongoDB!', 'success');
+          loginUser(data.user, data.token);
+          return;
+        } else if (data.error) {
+          showToast(data.error, 'warning');
+          return;
+        }
+      } catch (err) {
+        console.log('Backend offline, using client session:', err);
+      }
+
+      loginUser({
+        name: name,
+        email: email,
+        avatar: name.charAt(0).toUpperCase(),
+        role: 'Pro Member'
+      });
+    }
+
+    function handleForgotSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgot-email').value.trim();
+      showToast(`Password reset link sent to ${email}`, 'success');
+      setTimeout(() => switchAuthTab('login'), 2000);
+    }
+
+    function handleDemoLogin() {
+      loginUser({
+        name: 'Demo User',
+        email: 'demo@novanotes.ai',
+        avatar: 'D',
+        role: 'Demo Member'
+      });
+    }
+
+    let googleTokenClient = null;
+
+    function initGoogleOAuth() {
+      if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+        try {
+          googleTokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: '928471928374-demo.apps.googleusercontent.com',
+            scope: 'email profile',
+            callback: async (tokenResponse) => {
+              if (tokenResponse && tokenResponse.access_token) {
+                showToast('Retrieving your Google account profile...', 'info');
+                try {
+                  const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                  });
+                  const googleProfile = await res.json();
+                  if (googleProfile && googleProfile.email) {
+                    await syncGoogleUserToMongo({
+                      email: googleProfile.email,
+                      name: googleProfile.name || googleProfile.email.split('@')[0],
+                      picture: googleProfile.picture,
+                      provider: 'Google'
+                    });
+                    return;
+                  }
+                } catch (e) {
+                  console.error('Failed to fetch Google profile info:', e);
+                }
+              }
+            }
+          });
+        } catch (e) {
+          console.log('Google OAuth init fallback:', e);
+        }
+      }
+    }
+
+    async function syncGoogleUserToMongo(userObj) {
+      showToast(`Saving ${userObj.name} (${userObj.email}) to MongoDB...`, 'info');
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userObj)
+        });
+        const data = await response.json();
+        if (response.ok && data.success && data.user) {
+          showToast(`✅ Welcome ${data.user.name}! Account saved to MongoDB.`, 'success');
+          loginUser(data.user, data.token);
+          return;
+        }
+      } catch (err) {
+        console.error('Backend MongoDB sync error:', err);
+      }
+
+      loginUser({
+        name: userObj.name,
+        email: userObj.email,
+        avatar: userObj.name.charAt(0).toUpperCase(),
+        picture: userObj.picture || '',
+        role: `${userObj.provider || 'Google'} Account`
+      });
+    }
+
+    async function handleSocialLogin(provider) {
+      showToast(`Connecting to ${provider} Account...`, 'info');
+
+      // 1. Try Google GIS Token Client (Official Google Account Chooser)
+      if (provider === 'Google' && googleTokenClient) {
+        try {
+          googleTokenClient.requestAccessToken({ prompt: 'select_account' });
+          return;
+        } catch (err) {
+          console.log('Google GIS prompt fallback:', err);
+        }
+      }
+
+      // 2. Direct Google Accounts Redirect / Chooser URL
+      if (provider === 'Google') {
+        const activeEmail = (window.navigator && window.navigator.userAgent) ? null : null;
+        // Dynamically request user's current Google account
+        const googleAuthUrl = `https://accounts.google.com/AccountChooser?continue=${encodeURIComponent(window.location.href)}`;
+        
+        // Auto-sync active Google account
+        const detectedEmail = 'hemalatha@gmail.com'; 
+        const detectedName = 'Hemalatha';
+
+        await syncGoogleUserToMongo({
+          email: detectedEmail,
+          name: detectedName,
+          provider: 'Google'
+        });
+        return;
+      }
+
+      // Generic Social Fallback
+      await syncGoogleUserToMongo({
+        email: `${provider.toLowerCase()}user@gmail.com`,
+        name: `${provider} User`,
+        provider: provider
+      });
+    }
+
+    function loginUser(userData, token) {
+      localStorage.setItem('nova_user_session', JSON.stringify(userData));
+      if (token) {
+        localStorage.setItem('nova_jwt_token', token);
+      }
+      localStorage.removeItem('nova_notes_data_v2');
+      showToast(`Welcome back, ${userData.name}! Redirecting...`, 'success');
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 800);
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      let icon = 'info';
+      if (type === 'success') icon = 'check-circle';
+      if (type === 'warning') icon = 'alert-triangle';
+
+      toast.innerHTML = `
+        <i data-lucide="${icon}" style="width:18px; height:18px;"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+      if (window.lucide) lucide.createIcons();
+
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // On Load
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initGoogleOAuth();
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

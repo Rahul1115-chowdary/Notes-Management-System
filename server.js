@@ -29,8 +29,9 @@ app.use(requestLogger);
 // General API Rate Limiter
 app.use('/api/', rateLimiter.apiLimiter);
 
-// Serve static frontend files from 'project' directory
+// Serve static frontend files from root and 'project' directories
 app.use(express.static(path.join(__dirname, 'project')));
+app.use(express.static(__dirname));
 
 // MongoDB Connection State Management
 let client = null;
