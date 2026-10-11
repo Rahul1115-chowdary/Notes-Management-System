@@ -2,13 +2,13 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 async function testConnection() {
-  const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/testDB';
+  const mongoURI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/notes_db';
 
-  console.log(`Connecting to MongoDB at: ${mongoURI}...`);
+  console.log(`Connecting to MongoDB at: ${mongoURI.replace(/:[^:]*@/, ':****@')}...`);
 
   try {
     // 1. Connect to MongoDB
-    await mongoose.connect(mongoURI);
+    await mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 5000 });
     console.log('✅ Successfully connected to MongoDB!');
 
     // 2. Define a simple schema & model
