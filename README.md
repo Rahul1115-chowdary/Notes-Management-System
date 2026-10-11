@@ -5,6 +5,11 @@
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Rahul1115-chowdary/Notes-Management-System)
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FRahul1115-chowdary%2FNotes-Management-System&env=MONGODB_URI,JWT_SECRET)
 
+### 🌐 Live Production Websites:
+- **Primary Website**: [https://notesmanagementsystem.vercel.app](https://notesmanagementsystem.vercel.app)
+- **Live Mirror**: [https://notes-management-system-live.vercel.app](https://notes-management-system-live.vercel.app)
+- **Render Backend API**: [https://notes-management-backend-h087.onrender.com](https://notes-management-backend-h087.onrender.com)
+
 ---
 
 ## 🚀 Live Deployment Architecture Options
